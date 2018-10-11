@@ -1,0 +1,93 @@
+#include<avr/io.h>
+#define F_CPU 16000000UL
+#include<util/delay.h>
+
+#define Baud_Rate 9600UL
+#define ubrr_value ((F_CPU/(16UL*Baud_Rate)) - 1)
+
+void usart_init();
+void usart_send(unsigned char);
+unsigned char usart_rec();
+
+
+int main()
+{	
+	unsigned char i=0;
+	DDRB = 0XFF;
+
+
+	//lcd_init();
+	usart_init();
+
+	
+	while(1)
+	{
+
+	i=usart_rec();
+
+	if( (i=='f') || (i=='F') )
+	{
+	PORTB=0b00001010;
+	}
+	if( (i=='b') || (i=='B') )
+	{
+	PORTB=0b00000101;
+	}
+	if( (i=='l') || (i=='L') )
+	{
+	PORTB=0b00000110;
+	}
+	if( (i=='r') || (i=='R') )
+	{
+	PORTB=0b00001001;
+	}
+	
+	}
+	return 0;
+}
+
+void usart_init()
+{
+
+   //Set Baud rate
+   UBRRL = ubrr_value;
+   UBRRH = (ubrr_value>>8);
+
+
+   UCSRC=(1<<URSEL)|(1<<UCSZ0)|(1<<UCSZ1);
+   
+
+   //Enable The receiver and transmitter
+
+   UCSRB=(1<<RXEN)|(1<<TXEN);
+
+}
+////////////////////////////////////////////////
+void usart_send(unsigned char data)
+{
+  //Wait until the transmitter is ready
+
+   while(!(UCSRA & (1<<UDRE)))
+   {
+      //Do nothing
+   }
+
+   //Now write the data to USART buffer
+
+   UDR=data;
+}
+////////////////////////////////////////////////
+unsigned char usart_rec()
+{
+ //Wait untill a data is available
+
+   while(!(UCSRA & (1<<RXC)))
+   {
+      //Do nothing
+   }
+
+   //Now USART has got data from host
+   //and is available is buffer
+
+   return UDR;
+}
